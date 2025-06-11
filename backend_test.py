@@ -116,14 +116,38 @@ class DrivingSchoolAPITester:
         if self.token:
             headers['Authorization'] = f'Bearer {self.token}'
         
-        success, response = self.run_test(
-            f"Register {role.capitalize()} User",
-            "POST",
-            "auth/register",
-            200,
-            data=form_data,
-            headers=headers
-        )
+        # Use requests directly for form data
+        self.tests_run += 1
+        print(f"\n🔍 Testing Register {role.capitalize()} User...")
+        
+        try:
+            url = f"{self.base_url}/auth/register"
+            response = requests.post(url, data=form_data, headers=headers)
+            
+            print(f"URL: {url}")
+            print(f"Status Code: {response.status_code}")
+            
+            try:
+                response_data = response.json()
+                print(f"Response: {json.dumps(response_data, indent=2)}")
+            except:
+                print(f"Response: {response.text}")
+            
+            success = response.status_code == 200
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                self.token = response_data.get('access_token')
+                self.user_data = response_data.get('user')
+                print(f"✅ User registered successfully with email: {email}")
+                return True, {"email": email, "password": password}
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                return False, None
+                
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            return False, None
         
         if success and 'access_token' in response:
             self.token = response['access_token']
