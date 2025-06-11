@@ -140,6 +140,10 @@ class DrivingSchoolAPITester:
                 self.token = response_data.get('access_token')
                 self.user_data = response_data.get('user')
                 print(f"✅ User registered successfully with email: {email}")
+                
+                # Try to login to get a valid token
+                self.test_login(email, password)
+                
                 return True, {"email": email, "password": password}
             else:
                 print(f"❌ Failed - Expected 200, got {response.status_code}")
