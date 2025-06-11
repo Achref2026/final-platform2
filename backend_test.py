@@ -207,21 +207,36 @@ class DrivingSchoolAPITester:
         if self.token:
             headers['Authorization'] = f'Bearer {self.token}'
         
-        success, response = self.run_test(
-            "Create Driving School",
-            "POST",
-            "driving-schools",
-            200,
-            data=school_data,
-            headers=headers
-        )
+        # Use requests directly for form data
+        self.tests_run += 1
+        print(f"\n🔍 Testing Create Driving School...")
         
-        if success and 'id' in response:
-            self.created_school_id = response['id']
-            print(f"✅ Driving school created successfully with ID: {response['id']}")
-            return True
-        else:
-            print("❌ Failed to create driving school")
+        try:
+            url = f"{self.base_url}/driving-schools"
+            response = requests.post(url, data=school_data, headers=headers)
+            
+            print(f"URL: {url}")
+            print(f"Status Code: {response.status_code}")
+            
+            try:
+                response_data = response.json()
+                print(f"Response: {json.dumps(response_data, indent=2)}")
+            except:
+                print(f"Response: {response.text}")
+            
+            success = response.status_code == 200
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                self.created_school_id = response_data.get('id')
+                print(f"✅ Driving school created successfully with ID: {response_data.get('id')}")
+                return True
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
             return False
     
     def test_get_driving_school_details(self, school_id):
